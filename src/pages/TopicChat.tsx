@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Shield, ArrowLeft, Send, Loader2, AlertTriangle } from "lucide-react";
+import { Shield, ArrowLeft, Send, Loader2, AlertTriangle, BarChart3, RefreshCw } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
@@ -22,12 +23,16 @@ export default function TopicChat() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [blockMessage, setBlockMessage] = useState<string | null>(null);
+  const [showMetrics, setShowMetrics] = useState(false);
+  const [metrics, setMetrics] = useState({ checked: 0, blocked: 0, allowed: 0 });
+  const [metricsLoading, setMetricsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!topicId) return;
     fetchTopic();
     fetchMessages();
+    fetchMetrics();
 
     const channel = supabase
       .channel(`messages-${topicId}`)
@@ -50,6 +55,18 @@ export default function TopicChat() {
   async function fetchTopic() {
     const { data } = await supabase.from("topics").select("*").eq("id", topicId!).single();
     if (data) setTopic(data);
+  }
+
+  async function fetchMetrics() {
+    setMetricsLoading(true);
+    const [msgCount, blockedCount] = await Promise.all([
+      supabase.from("messages").select("id", { count: "exact", head: true }).eq("topic_id", topicId!),
+      supabase.from("blocked_messages").select("id", { count: "exact", head: true }).eq("topic_id", topicId!),
+    ]);
+    const allowed = msgCount.count || 0;
+    const blocked = blockedCount.count || 0;
+    setMetrics({ checked: allowed + blocked, blocked, allowed });
+    setMetricsLoading(false);
   }
 
   async function fetchMessages() {
@@ -129,12 +146,56 @@ export default function TopicChat() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
             <Shield className="h-4 w-4 text-primary-foreground" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="font-display font-bold truncate">{topic.name}</h1>
             <p className="text-xs text-muted-foreground truncate">{topic.description}</p>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setShowMetrics(!showMetrics)} className="shrink-0">
+            <BarChart3 className="h-4 w-4 mr-1" /> Metrics
+          </Button>
         </div>
       </header>
+
+      {/* Moderation Metrics */}
+      <AnimatePresence>
+        {showMetrics && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="border-b bg-card overflow-hidden"
+          >
+            <div className="container max-w-3xl px-4 py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <h2 className="font-display font-bold text-sm">Moderation Metrics</h2>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => fetchMetrics()} disabled={metricsLoading}>
+                  <RefreshCw className={`h-3 w-3 ${metricsLoading ? "animate-spin" : ""}`} />
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <Card className="border">
+                  <CardContent className="py-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Messages Checked</p>
+                    <p className="text-2xl font-display font-bold">{metrics.checked}</p>
+                  </CardContent>
+                </Card>
+                <Card className="border">
+                  <CardContent className="py-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Messages Blocked</p>
+                    <p className="text-2xl font-display font-bold text-destructive">{metrics.blocked}</p>
+                  </CardContent>
+                </Card>
+                <Card className="border">
+                  <CardContent className="py-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Messages Allowed</p>
+                    <p className="text-2xl font-display font-bold text-success">{metrics.allowed}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">

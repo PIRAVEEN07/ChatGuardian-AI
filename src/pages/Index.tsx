@@ -36,7 +36,7 @@ export default function Index() {
                 {user ? "Go to Community" : "Get Started"} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               {!user && (
-                <Button size="lg" variant="outline" onClick={() => navigate("/login")} className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
+                <Button size="lg" variant="outline" onClick={() => navigate("/login")} className="border-primary-foreground/30 text-foreground bg-card hover:bg-muted">
                   Sign In
                 </Button>
               )}
