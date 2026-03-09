@@ -57,6 +57,18 @@ export default function TopicChat() {
     if (data) setTopic(data);
   }
 
+  async function fetchMetrics() {
+    setMetricsLoading(true);
+    const [msgCount, blockedCount] = await Promise.all([
+      supabase.from("messages").select("id", { count: "exact", head: true }).eq("topic_id", topicId!),
+      supabase.from("blocked_messages").select("id", { count: "exact", head: true }).eq("topic_id", topicId!),
+    ]);
+    const allowed = msgCount.count || 0;
+    const blocked = blockedCount.count || 0;
+    setMetrics({ checked: allowed + blocked, blocked, allowed });
+    setMetricsLoading(false);
+  }
+
   async function fetchMessages() {
     const { data } = await supabase
       .from("messages")
