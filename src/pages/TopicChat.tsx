@@ -55,10 +55,15 @@ export default function TopicChat() {
   async function fetchMessages() {
     const { data } = await supabase
       .from("messages")
-      .select("*, profiles!messages_user_id_fkey(display_name)")
+      .select("*")
       .eq("topic_id", topicId!)
       .order("created_at", { ascending: true });
-    if (data) setMessages(data as MessageWithProfile[]);
+    if (!data) return;
+    // Fetch profiles for all users
+    const userIds = [...new Set(data.map((m) => m.user_id))];
+    const { data: profiles } = await supabase.from("profiles").select("user_id, display_name").in("user_id", userIds);
+    const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
+    setMessages(data.map((m) => ({ ...m, profiles: profileMap.get(m.user_id) || null })));
   }
 
   async function sendMessage(e: React.FormEvent) {

@@ -28,15 +28,23 @@ export default function Admin() {
 
   async function fetchData() {
     const [blocked, topicsData, msgCount] = await Promise.all([
-      supabase.from("blocked_messages")
-        .select("*, profiles!blocked_messages_user_id_fkey(display_name), topics!blocked_messages_topic_id_fkey(name)")
-        .order("created_at", { ascending: false })
-        .limit(50),
+      supabase.from("blocked_messages").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("topics").select("*").order("created_at", { ascending: false }),
       supabase.from("messages").select("id", { count: "exact", head: true }),
     ]);
 
-    if (blocked.data) setBlockedMessages(blocked.data as BlockedWithProfile[]);
+    if (blocked.data && topicsData.data) {
+      // Manual join
+      const userIds = [...new Set(blocked.data.map((b) => b.user_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, display_name").in("user_id", userIds);
+      const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
+      const topicMap = new Map(topicsData.data.map((t) => [t.id, t]));
+      setBlockedMessages(blocked.data.map((b) => ({
+        ...b,
+        profiles: profileMap.get(b.user_id) || null,
+        topics: topicMap.get(b.topic_id) ? { name: topicMap.get(b.topic_id)!.name } : null,
+      })));
+    }
     if (topicsData.data) setTopics(topicsData.data);
 
     setStats({
