@@ -74,86 +74,147 @@ export default function Community() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container flex h-16 items-center justify-between">
+      {/* Header with glassmorphism */}
+      <header className="border-b border-white/10 glass sticky top-0 z-50">
+        <div className="container flex h-20 items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
-              <Shield className="h-5 w-5 text-primary-foreground" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg gradient-primary glow-primary">
+              <Shield className="h-6 w-6 text-primary-foreground" />
             </div>
-            <h1 className="font-display text-xl font-bold">ChatGuardian AI</h1>
+            <div>
+              <h1 className="font-display text-xl font-bold gradient-text">ChatGuardian AI</h1>
+              <p className="text-xs text-accent">AI Community Moderator</p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">{profile?.display_name}</span>
-            {isAdmin && (
-              <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>
-                <Settings className="mr-1 h-4 w-4" /> Admin
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-2 glass-sm px-3 py-1.5 rounded-full">
+              <div className="h-2 w-2 rounded-full bg-accent animate-pulse-dot" />
+              <span className="text-xs font-medium text-accent">AI Moderation Active</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">{profile?.display_name}</span>
+              {isAdmin && (
+                <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} className="hover:bg-white/10 transition-colors">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => { signOut(); navigate("/"); }} className="hover:bg-white/10 transition-colors">
+                <LogOut className="h-4 w-4" />
               </Button>
-            )}
-            <Button variant="ghost" size="sm" onClick={() => { signOut(); navigate("/"); }}>
-              <LogOut className="h-4 w-4" />
-            </Button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="font-display text-3xl font-bold">Community Topics</h2>
-            <p className="text-muted-foreground">Join a discussion or start a new topic</p>
-          </div>
+      <main className="container py-12">
+        {/* Title Section */}
+        <div className="mb-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <h2 className="font-display text-4xl font-bold mb-2 gradient-text">Community Topics</h2>
+            <p className="text-foreground/70">Join discussions or create a new topic</p>
+          </motion.div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button><Plus className="mr-2 h-4 w-4" /> New Topic</Button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button className="gradient-primary hover:shadow-elevated transition-shadow gap-2 h-11">
+                  <Plus className="h-5 w-5" /> New Topic
+                </Button>
+              </motion.div>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="glass border-white/10">
               <DialogHeader>
-                <DialogTitle>Create a New Topic</DialogTitle>
+                <DialogTitle className="text-xl">Create a New Topic</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 pt-2">
+              <div className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <Label>Topic Name</Label>
-                  <Input value={newTopicName} onChange={(e) => setNewTopicName(e.target.value)} placeholder="e.g., Hackathon Ideas" />
+                  <Label className="text-foreground">Topic Name</Label>
+                  <Input 
+                    value={newTopicName} 
+                    onChange={(e) => setNewTopicName(e.target.value)} 
+                    placeholder="e.g., Hackathon Ideas"
+                    className="glass-sm border-white/10 text-foreground placeholder:text-foreground/40 focus:border-primary focus:ring-primary/50"
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea value={newTopicDesc} onChange={(e) => setNewTopicDesc(e.target.value)} placeholder="Describe what this topic is about..." rows={3} />
+                  <Label className="text-foreground">Description</Label>
+                  <Textarea 
+                    value={newTopicDesc} 
+                    onChange={(e) => setNewTopicDesc(e.target.value)} 
+                    placeholder="Describe what this topic is about..."
+                    rows={3}
+                    className="glass-sm border-white/10 text-foreground placeholder:text-foreground/40 focus:border-primary focus:ring-primary/50 resize-none"
+                  />
                 </div>
-                <Button onClick={createTopic} disabled={creating} className="w-full">
-                  {creating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Validating with AI...</> : "Create Topic"}
+                <Button 
+                  onClick={createTopic} 
+                  disabled={creating}
+                  className="w-full gradient-primary hover:shadow-elevated transition-all h-10"
+                >
+                  {creating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Validating with AI...
+                    </>
+                  ) : (
+                    "Create Topic"
+                  )}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
 
+        {/* Topics Grid */}
         {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+          <div className="flex justify-center py-20">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-muted-foreground">Loading topics...</p>
+            </div>
+          </div>
         ) : topics.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-lg font-medium">No topics yet</p>
-              <p className="text-muted-foreground">Be the first to start a discussion!</p>
-            </CardContent>
-          </Card>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+            <Card className="glass border-white/10 text-center py-16">
+              <CardContent>
+                <MessageSquare className="mx-auto h-16 w-16 text-primary/50 mb-4" />
+                <p className="text-lg font-semibold text-foreground mb-2">No topics yet</p>
+                <p className="text-muted-foreground mb-6">Be the first to start a discussion!</p>
+                <Button className="gradient-primary" onClick={() => setDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" /> Create First Topic
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {topics.map((topic, i) => (
-              <motion.div key={topic.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <Card className="cursor-pointer hover:shadow-elevated transition-shadow" onClick={() => navigate(`/topic/${topic.id}`)}>
-                  <CardHeader>
-                    <CardTitle className="font-display text-lg">{topic.name}</CardTitle>
-                    <CardDescription className="line-clamp-2">{topic.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="h-4 w-4" />
+              <motion.div 
+                key={topic.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08, duration: 0.4 }}
+                className="group cursor-pointer"
+                onClick={() => navigate(`/topic/${topic.id}`)}
+              >
+                <div className="glass glass-lg border-white/10 rounded-xl p-6 h-full hover:border-primary/30 hover:bg-white/[0.12] transition-all duration-300 hover-lift">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="font-display text-xl font-bold text-foreground group-hover:gradient-text transition-all">{topic.name}</h3>
+                    </div>
+                    <MessageSquare className="h-5 w-5 text-accent opacity-60 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  
+                  <p className="text-foreground/70 text-sm mb-4 line-clamp-2">{topic.description}</p>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Users className="h-4 w-4 text-accent/60" />
                       <span>{new Date(topic.created_at).toLocaleDateString()}</span>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div className="text-xs px-2 py-1 rounded-full glass-sm text-accent">
+                      Join →
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>

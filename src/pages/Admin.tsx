@@ -5,8 +5,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, ArrowLeft, MessageSquare, AlertTriangle, BarChart3, Trash2 } from "lucide-react";
+import { Shield, ArrowLeft, MessageSquare, AlertTriangle, BarChart3, Trash2, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface BlockedWithProfile extends Tables<"blocked_messages"> {
@@ -60,92 +61,179 @@ export default function Admin() {
     else { toast.success("Topic deleted"); fetchData(); }
   }
 
+  const blockRate = stats.totalMessages > 0 ? ((stats.blockedMessages / stats.totalMessages) * 100).toFixed(1) : 0;
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container flex h-16 items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/community")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-accent">
-            <Shield className="h-5 w-5 text-accent-foreground" />
+      {/* Header with glassmorphism */}
+      <header className="border-b border-white/10 glass sticky top-0 z-50">
+        <div className="container flex h-20 items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate("/community")}
+              className="hover:bg-white/10 transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg gradient-accent glow-accent">
+              <Shield className="h-6 w-6 text-accent-foreground" />
+            </div>
+            <h1 className="font-display text-xl font-bold gradient-text">Admin Panel</h1>
           </div>
-          <h1 className="font-display text-xl font-bold">Admin Panel</h1>
+          <div className="text-sm text-muted-foreground">Community Moderation Control</div>
         </div>
       </header>
 
-      <main className="container py-8">
+      <main className="container py-12">
         {/* Stats */}
-        <div className="mb-8 grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Messages</CardTitle>
-              <MessageSquare className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent><p className="text-3xl font-display font-bold">{stats.totalMessages}</p></CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Blocked Messages</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-            </CardHeader>
-            <CardContent><p className="text-3xl font-display font-bold">{stats.blockedMessages}</p></CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active Topics</CardTitle>
-              <BarChart3 className="h-4 w-4 text-accent" />
-            </CardHeader>
-            <CardContent><p className="text-3xl font-display font-bold">{stats.totalTopics}</p></CardContent>
-          </Card>
+        <div className="mb-12 grid gap-6 md:grid-cols-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0 }}
+          >
+            <div className="glass glass-lg border border-white/10 rounded-xl p-6 hover-lift">
+              <div className="flex items-center justify-between mb-3">
+                <MessageSquare className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-foreground/70 text-sm mb-1">Total Messages</p>
+              <p className="text-3xl font-display font-bold gradient-text">{stats.totalMessages}</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <div className="glass glass-lg border border-white/10 rounded-xl p-6 hover-lift">
+              <div className="flex items-center justify-between mb-3">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+              </div>
+              <p className="text-foreground/70 text-sm mb-1">Blocked Messages</p>
+              <p className="text-3xl font-display font-bold text-destructive">{stats.blockedMessages}</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="glass glass-lg border border-white/10 rounded-xl p-6 hover-lift">
+              <div className="flex items-center justify-between mb-3">
+                <BarChart3 className="h-5 w-5 text-accent" />
+              </div>
+              <p className="text-foreground/70 text-sm mb-1">Active Topics</p>
+              <p className="text-3xl font-display font-bold text-accent">{stats.totalTopics}</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <div className="glass glass-lg border border-white/10 rounded-xl p-6 hover-lift">
+              <div className="flex items-center justify-between mb-3">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+              <p className="text-foreground/70 text-sm mb-1">Block Rate</p>
+              <p className="text-3xl font-display font-bold gradient-text">{blockRate}%</p>
+            </div>
+          </motion.div>
         </div>
 
-        <Tabs defaultValue="blocked">
-          <TabsList>
-            <TabsTrigger value="blocked">Blocked Messages</TabsTrigger>
-            <TabsTrigger value="topics">Manage Topics</TabsTrigger>
+        {/* Tabs */}
+        <Tabs defaultValue="blocked" className="w-full">
+          <TabsList className="glass glass-sm border border-white/10 p-1 mb-8 w-full">
+            <TabsTrigger value="blocked" className="flex-1 data-[state=active]:bg-white/10">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Blocked Messages
+            </TabsTrigger>
+            <TabsTrigger value="topics" className="flex-1 data-[state=active]:bg-white/10">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Manage Topics
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="blocked" className="space-y-3 mt-4">
+          <TabsContent value="blocked" className="space-y-4 mt-4">
             {blockedMessages.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No blocked messages yet</p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="glass glass-lg border border-white/10 rounded-xl p-12 text-center"
+              >
+                <p className="text-foreground/70 text-lg">No blocked messages yet</p>
+                <p className="text-foreground/50 text-sm mt-2">All community content is in compliance</p>
+              </motion.div>
             ) : (
-              blockedMessages.map((msg) => (
-                <Card key={msg.id}>
-                  <CardContent className="py-4">
+              blockedMessages.map((msg, i) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <div className="glass glass-sm border border-destructive/20 rounded-lg p-5 hover:border-destructive/40 transition-colors">
                     <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-semibold">{msg.profiles?.display_name || "Unknown"}</span>
-                          <span className="text-xs text-muted-foreground">in {msg.topics?.name || "Unknown"}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-semibold text-foreground">{msg.profiles?.display_name || "Unknown"}</span>
+                          <span className="text-xs px-2 py-1 rounded-full glass-sm text-accent">{msg.topics?.name || "Unknown"}</span>
                         </div>
-                        <p className="text-sm text-foreground">{msg.content}</p>
-                        <p className="text-xs text-destructive mt-1">Reason: {msg.reason}</p>
+                        <p className="text-sm text-foreground/80 mb-2">{msg.content}</p>
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+                          <p className="text-xs text-destructive">Reason: {msg.reason}</p>
+                        </div>
                       </div>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
                         {new Date(msg.created_at).toLocaleString()}
                       </span>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </motion.div>
               ))
             )}
           </TabsContent>
 
-          <TabsContent value="topics" className="space-y-3 mt-4">
-            {topics.map((topic) => (
-              <Card key={topic.id}>
-                <CardContent className="py-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold">{topic.name}</p>
-                    <p className="text-sm text-muted-foreground">{topic.description}</p>
+          <TabsContent value="topics" className="space-y-4 mt-4">
+            {topics.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="glass glass-lg border border-white/10 rounded-xl p-12 text-center"
+              >
+                <p className="text-foreground/70 text-lg">No topics yet</p>
+              </motion.div>
+            ) : (
+              topics.map((topic, i) => (
+                <motion.div
+                  key={topic.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <div className="glass glass-sm border border-white/10 rounded-lg p-5 hover:border-primary/30 hover:bg-white/[0.12] transition-all flex items-center justify-between group">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground group-hover:gradient-text transition-all">{topic.name}</p>
+                      <p className="text-sm text-foreground/60 truncate">{topic.description}</p>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => deleteTopic(topic.id)}
+                      className="ml-4 p-2 hover:bg-destructive/20 rounded-lg transition-colors flex-shrink-0"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </motion.button>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => deleteTopic(topic.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                </motion.div>
+              ))
+            )}
           </TabsContent>
         </Tabs>
       </main>

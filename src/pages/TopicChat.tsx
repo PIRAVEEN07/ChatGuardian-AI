@@ -141,22 +141,41 @@ export default function TopicChat() {
 
   return (
     <div className="flex h-screen flex-col bg-background">
-      {/* Header */}
-      <header className="border-b bg-card px-4 py-3">
-        <div className="container flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/community")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-            <Shield className="h-4 w-4 text-primary-foreground" />
+      {/* Header with glassmorphism */}
+      <header className="border-b border-white/10 glass sticky top-0 z-40 px-4 py-4">
+        <div className="container flex items-center gap-3 justify-between">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate("/community")}
+              className="hover:bg-white/10 transition-colors shrink-0"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg gradient-primary glow-primary shrink-0">
+              <Shield className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="font-display font-bold text-foreground truncate">{topic.name}</h1>
+              <p className="text-xs text-muted-foreground truncate">{topic.description}</p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="font-display font-bold truncate">{topic.name}</h1>
-            <p className="text-xs text-muted-foreground truncate">{topic.description}</p>
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="hidden sm:flex items-center gap-2 glass-sm px-3 py-1.5 rounded-full">
+              <div className="h-2 w-2 rounded-full bg-accent animate-pulse-dot" />
+              <span className="text-xs font-medium text-accent">Moderation Active</span>
+            </div>
+            <Button 
+              variant="ghost"
+              size="sm" 
+              onClick={() => setShowMetrics(!showMetrics)}
+              className="hover:bg-white/10 transition-colors gap-1"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">Metrics</span>
+            </Button>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setShowMetrics(!showMetrics)} className="shrink-0">
-            <BarChart3 className="h-4 w-4 mr-1" /> Metrics
-          </Button>
         </div>
       </header>
 
@@ -167,34 +186,41 @@ export default function TopicChat() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="border-b bg-card overflow-hidden"
+            transition={{ duration: 0.3 }}
+            className="border-b border-white/10 overflow-hidden"
           >
-            <div className="container max-w-3xl px-4 py-4">
-              <div className="flex items-center gap-2 mb-3">
-                <h2 className="font-display font-bold text-sm">Moderation Metrics</h2>
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => fetchMetrics()} disabled={metricsLoading}>
+            <div className="container max-w-4xl px-4 py-6 mx-auto">
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="font-display font-bold text-sm text-foreground">Moderation Metrics</h2>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6 hover:bg-white/10" 
+                  onClick={() => fetchMetrics()} 
+                  disabled={metricsLoading}
+                >
                   <RefreshCw className={`h-3 w-3 ${metricsLoading ? "animate-spin" : ""}`} />
                 </Button>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <Card className="border">
-                  <CardContent className="py-3 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">Messages Checked</p>
-                    <p className="text-2xl font-display font-bold">{metrics.checked}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border">
-                  <CardContent className="py-3 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">Messages Blocked</p>
-                    <p className="text-2xl font-display font-bold text-destructive">{metrics.blocked}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border">
-                  <CardContent className="py-3 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">Messages Allowed</p>
-                    <p className="text-2xl font-display font-bold text-success">{metrics.allowed}</p>
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-3 gap-4">
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
+                  <div className="glass glass-lg border-white/10 rounded-lg p-4 text-center hover-lift">
+                    <p className="text-xs text-muted-foreground mb-2">Messages Checked</p>
+                    <p className="text-3xl font-display font-bold gradient-text">{metrics.checked}</p>
+                  </div>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                  <div className="glass glass-lg border-white/10 rounded-lg p-4 text-center hover-lift">
+                    <p className="text-xs text-muted-foreground mb-2">Messages Blocked</p>
+                    <p className="text-3xl font-display font-bold text-destructive">{metrics.blocked}</p>
+                  </div>
+                </motion.div>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                  <div className="glass glass-lg border-white/10 rounded-lg p-4 text-center hover-lift">
+                    <p className="text-xs text-muted-foreground mb-2">Messages Allowed</p>
+                    <p className="text-3xl font-display font-bold text-green-400">{metrics.allowed}</p>
+                  </div>
+                </motion.div>
               </div>
             </div>
           </motion.div>
@@ -202,32 +228,41 @@ export default function TopicChat() {
       </AnimatePresence>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
-        <div className="container max-w-3xl space-y-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="container max-w-4xl mx-auto space-y-4">
           {messages.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <p className="text-lg font-medium">No messages yet</p>
-              <p>Start the conversation!</p>
-            </div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
+              <div className="flex justify-center mb-4">
+                <Shield className="h-12 w-12 text-accent/40" />
+              </div>
+              <p className="text-lg font-semibold text-foreground mb-1">No messages yet</p>
+              <p className="text-muted-foreground text-sm">Start the conversation! Every message is protected by AI moderation.</p>
+            </motion.div>
           )}
-          <AnimatePresence>
-            {messages.map((msg) => {
+          <AnimatePresence mode="popLayout">
+            {messages.map((msg, idx) => {
               const isOwn = msg.user_id === user?.id;
               return (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, y: 10, x: isOwn ? 20 : -20 }}
+                  animate={{ opacity: 1, y: 0, x: 0 }}
+                  transition={{ duration: 0.3 }}
                   className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
                 >
-                  <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isOwn ? "bg-primary text-primary-foreground rounded-br-md" : "bg-card border rounded-bl-md shadow-card"}`}>
+                  <div className={`max-w-[70%] rounded-2xl transition-all duration-300
+                    ${isOwn 
+                      ? "gradient-primary text-primary-foreground rounded-br-none shadow-elevated hover:shadow-elevated" 
+                      : "glass glass-sm border-white/10 rounded-bl-none hover:border-accent/30 hover:bg-white/[0.12]"
+                    } px-4 py-3`}
+                  >
                     {!isOwn && (
-                      <p className="text-xs font-semibold text-primary mb-0.5">
+                      <p className="text-xs font-semibold text-accent mb-1">
                         {msg.profiles?.display_name || "User"}
                       </p>
                     )}
                     <p className="text-sm leading-relaxed">{msg.content}</p>
-                    <p className={`text-[10px] mt-1 ${isOwn ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
+                    <p className={`text-[11px] mt-2 opacity-70`}>
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </p>
                   </div>
@@ -242,32 +277,56 @@ export default function TopicChat() {
       <AnimatePresence>
         {blockMessage && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="border-t bg-destructive/10 px-4 py-3"
+            exit={{ opacity: 0, y: -10 }}
+            className="border-t border-destructive/30 bg-destructive/10 px-4 py-3 backdrop-blur-sm"
           >
-            <div className="container max-w-3xl flex items-center gap-2 text-sm text-destructive">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              <span>{blockMessage}</span>
+            <div className="container max-w-4xl mx-auto flex items-center gap-3 text-sm text-destructive">
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-semibold">Message not allowed</p>
+                <p className="text-xs opacity-80">{blockMessage}</p>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Input */}
-      <div className="border-t bg-card px-4 py-3">
-        <form onSubmit={sendMessage} className="container max-w-3xl flex gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            disabled={sending}
-            className="flex-1"
-          />
-          <Button type="submit" disabled={sending || !input.trim()} size="icon">
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          </Button>
+      {/* Input Area */}
+      <div className="border-t border-white/10 glass px-4 py-4">
+        <form onSubmit={sendMessage} className="container max-w-4xl mx-auto">
+          <div className="flex gap-3 items-end">
+            <div className="flex-1 relative">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage(e);
+                  }
+                }}
+                placeholder="Share your thoughts (Shift+Enter for new line)..."
+                disabled={sending}
+                className="glass-sm border-white/20 text-foreground placeholder:text-foreground/40 rounded-full px-5 py-3 focus:border-primary/50 focus:ring-primary/50 focus:ring-2 transition-all resize-none"
+              />
+            </div>
+            <motion.button
+              type="submit"
+              disabled={sending || !input.trim()}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="gradient-primary hover:shadow-elevated text-primary-foreground rounded-full p-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex-shrink-0 h-10 w-10 flex items-center justify-center"
+            >
+              {sending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Send className="h-5 w-5" />
+              )}
+            </motion.button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 px-5">All messages are AI-moderated for community safety</p>
         </form>
       </div>
     </div>
