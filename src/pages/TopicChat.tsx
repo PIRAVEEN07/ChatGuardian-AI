@@ -59,13 +59,16 @@ export default function TopicChat() {
 
   async function fetchMetrics() {
     setMetricsLoading(true);
-    const [msgCount, blockedCount] = await Promise.all([
-      supabase.from("messages").select("id", { count: "exact", head: true }).eq("topic_id", topicId!),
-      supabase.from("blocked_messages").select("id", { count: "exact", head: true }).eq("topic_id", topicId!),
-    ]);
-    const allowed = msgCount.count || 0;
-    const blocked = blockedCount.count || 0;
-    setMetrics({ checked: allowed + blocked, blocked, allowed });
+    try {
+      const msgCount = await supabase.from("messages").select("id", { count: "exact", head: true }).eq("topic_id", topicId!);
+      const blockedResult = await supabase.rpc("count_blocked_messages", { _topic_id: topicId! }) as { data: number | null; error: any };
+      console.log("Metrics debug - msgCount:", msgCount.count, "blockedData:", blockedResult.data, "blockedError:", blockedResult.error);
+      const allowed = msgCount.count ?? 0;
+      const blocked = blockedResult.data ?? 0;
+      setMetrics({ checked: allowed + blocked, blocked, allowed });
+    } catch (err) {
+      console.error("fetchMetrics error:", err);
+    }
     setMetricsLoading(false);
   }
 
@@ -108,6 +111,7 @@ export default function TopicChat() {
         setBlockMessage(modResult.reason || "This message is not relevant to the community discussion.");
         setInput("");
         setSending(false);
+        fetchMetrics();
         setTimeout(() => setBlockMessage(null), 5000);
         return;
       }
