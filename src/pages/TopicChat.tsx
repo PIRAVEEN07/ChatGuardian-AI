@@ -146,10 +146,13 @@ export default function TopicChat() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
             <Shield className="h-4 w-4 text-primary-foreground" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h1 className="font-display font-bold truncate">{topic.name}</h1>
             <p className="text-xs text-muted-foreground truncate">{topic.description}</p>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setShowMetrics(!showMetrics)} className="shrink-0">
+            <BarChart3 className="h-4 w-4 mr-1" /> Metrics
+          </Button>
         </div>
       </header>
 
