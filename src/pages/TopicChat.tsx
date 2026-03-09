@@ -32,6 +32,7 @@ export default function TopicChat() {
     if (!topicId) return;
     fetchTopic();
     fetchMessages();
+    fetchMetrics();
 
     const channel = supabase
       .channel(`messages-${topicId}`)
