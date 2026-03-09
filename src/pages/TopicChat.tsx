@@ -23,6 +23,9 @@ export default function TopicChat() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [blockMessage, setBlockMessage] = useState<string | null>(null);
+  const [showMetrics, setShowMetrics] = useState(false);
+  const [metrics, setMetrics] = useState({ checked: 0, blocked: 0, allowed: 0 });
+  const [metricsLoading, setMetricsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
