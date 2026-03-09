@@ -156,6 +156,47 @@ export default function TopicChat() {
         </div>
       </header>
 
+      {/* Moderation Metrics */}
+      <AnimatePresence>
+        {showMetrics && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="border-b bg-card overflow-hidden"
+          >
+            <div className="container max-w-3xl px-4 py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <h2 className="font-display font-bold text-sm">Moderation Metrics</h2>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => fetchMetrics()} disabled={metricsLoading}>
+                  <RefreshCw className={`h-3 w-3 ${metricsLoading ? "animate-spin" : ""}`} />
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <Card className="border">
+                  <CardContent className="py-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Messages Checked</p>
+                    <p className="text-2xl font-display font-bold">{metrics.checked}</p>
+                  </CardContent>
+                </Card>
+                <Card className="border">
+                  <CardContent className="py-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Messages Blocked</p>
+                    <p className="text-2xl font-display font-bold text-destructive">{metrics.blocked}</p>
+                  </CardContent>
+                </Card>
+                <Card className="border">
+                  <CardContent className="py-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">Messages Allowed</p>
+                    <p className="text-2xl font-display font-bold text-success">{metrics.allowed}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Messages */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
         <div className="container max-w-3xl space-y-3">
