@@ -158,6 +158,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      count_blocked_messages: {
+        Args: {
+          _topic_id: string
+        }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
