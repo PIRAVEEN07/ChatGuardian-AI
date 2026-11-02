@@ -16,23 +16,30 @@ interface BlockedWithProfile extends Tables<"blocked_messages"> {
 }
 
 export default function Admin() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, adminLoading } = useAuth();
   const navigate = useNavigate();
   const [blockedMessages, setBlockedMessages] = useState<BlockedWithProfile[]>([]);
   const [topics, setTopics] = useState<Tables<"topics">[]>([]);
-  const [stats, setStats] = useState({ totalMessages: 0, blockedMessages: 0, totalTopics: 0 });
+  const [stats, setStats] = useState({ allowedMessages: 0, blockedMessages: 0, totalTopics: 0 });
 
   useEffect(() => {
+    if (adminLoading) return;
     if (!isAdmin) { navigate("/community"); return; }
     fetchData();
-  }, [isAdmin]);
+  }, [adminLoading, isAdmin, navigate]);
 
   async function fetchData() {
-    const [blocked, topicsData, msgCount] = await Promise.all([
+    const [blocked, topicsData, allowedCount, blockedCount] = await Promise.all([
       supabase.from("blocked_messages").select("*").order("created_at", { ascending: false }).limit(50),
       supabase.from("topics").select("*").order("created_at", { ascending: false }),
       supabase.from("messages").select("id", { count: "exact", head: true }),
+      supabase.from("blocked_messages").select("id", { count: "exact", head: true }),
     ]);
+
+    if (blocked.error || topicsData.error || allowedCount.error || blockedCount.error) {
+      toast.error("Could not load admin data. Please try again.");
+      return;
+    }
 
     if (blocked.data && topicsData.data) {
       // Manual join
@@ -49,8 +56,8 @@ export default function Admin() {
     if (topicsData.data) setTopics(topicsData.data);
 
     setStats({
-      totalMessages: msgCount.count || 0,
-      blockedMessages: blocked.data?.length || 0,
+      allowedMessages: allowedCount.count || 0,
+      blockedMessages: blockedCount.count || 0,
       totalTopics: topicsData.data?.length || 0,
     });
   }
@@ -61,7 +68,16 @@ export default function Admin() {
     else { toast.success("Topic deleted"); fetchData(); }
   }
 
-  const blockRate = stats.totalMessages > 0 ? ((stats.blockedMessages / stats.totalMessages) * 100).toFixed(1) : 0;
+  const checkedMessages = stats.allowedMessages + stats.blockedMessages;
+  const blockRate = checkedMessages > 0 ? ((stats.blockedMessages / checkedMessages) * 100).toFixed(1) : 0;
+
+  if (adminLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center" role="status" aria-label="Checking administrator access">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,8 +114,8 @@ export default function Admin() {
               <div className="flex items-center justify-between mb-3">
                 <MessageSquare className="h-5 w-5 text-primary" />
               </div>
-              <p className="text-foreground/70 text-sm mb-1">Total Messages</p>
-              <p className="text-3xl font-display font-bold gradient-text">{stats.totalMessages}</p>
+              <p className="text-foreground/70 text-sm mb-1">Allowed Messages</p>
+              <p className="text-3xl font-display font-bold gradient-text">{stats.allowedMessages}</p>
             </div>
           </motion.div>
 

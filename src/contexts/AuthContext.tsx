@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  adminLoading: boolean;
   profile: { display_name: string; avatar_url: string | null } | null;
   isAdmin: boolean;
   signUp: (email: string, password: string, displayName: string) => Promise<{ error: Error | null }>;
@@ -19,47 +20,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adminLoading, setAdminLoading] = useState(true);
   const [profile, setProfile] = useState<{ display_name: string; avatar_url: string | null } | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setTimeout(() => {
-          fetchProfile(session.user.id);
-          checkAdmin(session.user.id);
-        }, 0);
-      } else {
+    let authRevision = 0;
+    let userDataRevision = 0;
+    let active = true;
+
+    async function syncUserData(userId: string | null) {
+      const revision = ++userDataRevision;
+      if (!userId) {
         setProfile(null);
         setIsAdmin(false);
+        setAdminLoading(false);
+        return;
       }
-      setLoading(false);
-    });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+      setAdminLoading(true);
+      try {
+        const [profileResult, adminResult] = await Promise.all([
+          supabase.from("profiles").select("display_name, avatar_url").eq("user_id", userId).single(),
+          supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
+        ]);
+
+        if (!active || revision !== userDataRevision) return;
+        setProfile(profileResult.data ?? null);
+        setIsAdmin(!adminResult.error && !!adminResult.data);
+      } catch {
+        if (!active || revision !== userDataRevision) return;
+        setProfile(null);
+        setIsAdmin(false);
+      } finally {
+        if (active && revision === userDataRevision) setAdminLoading(false);
+      }
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      authRevision += 1;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
-        checkAdmin(session.user.id);
+        setAdminLoading(true);
+        setTimeout(() => {
+          void syncUserData(session.user.id);
+        }, 0);
+      } else {
+        void syncUserData(null);
       }
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    const initialAuthRevision = authRevision;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active || initialAuthRevision !== authRevision) return;
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        void syncUserData(session.user.id);
+      } else {
+        void syncUserData(null);
+      }
+      setLoading(false);
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, []);
-
-  async function fetchProfile(userId: string) {
-    const { data } = await supabase.from("profiles").select("display_name, avatar_url").eq("user_id", userId).single();
-    if (data) setProfile(data);
-  }
-
-  async function checkAdmin(userId: string) {
-    const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-    setIsAdmin(!!data);
-  }
 
   const signUp = async (email: string, password: string, displayName: string) => {
     const { error } = await supabase.auth.signUp({
@@ -79,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, profile, isAdmin, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, adminLoading, profile, isAdmin, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

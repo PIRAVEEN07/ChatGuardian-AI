@@ -41,6 +41,7 @@ export default function TopicChat() {
           const newMsg = payload.new as Tables<"messages">;
           const { data: prof } = await supabase.from("profiles").select("display_name").eq("user_id", newMsg.user_id).single();
           setMessages((prev) => [...prev, { ...newMsg, profiles: prof }]);
+          void fetchMetrics();
         }
       )
       .subscribe();
@@ -58,18 +59,23 @@ export default function TopicChat() {
   }
 
   async function fetchMetrics() {
+    if (!topicId) return;
     setMetricsLoading(true);
     try {
-      const msgCount = await supabase.from("messages").select("id", { count: "exact", head: true }).eq("topic_id", topicId!);
-      const blockedResult = await supabase.rpc("count_blocked_messages", { _topic_id: topicId! }) as { data: number | null; error: any };
-      console.log("Metrics debug - msgCount:", msgCount.count, "blockedData:", blockedResult.data, "blockedError:", blockedResult.error);
+      const [msgCount, blockedResult] = await Promise.all([
+        supabase.from("messages").select("id", { count: "exact", head: true }).eq("topic_id", topicId),
+        supabase.rpc("count_blocked_messages", { _topic_id: topicId }),
+      ]);
+      if (msgCount.error) throw msgCount.error;
+      if (blockedResult.error) throw blockedResult.error;
       const allowed = msgCount.count ?? 0;
       const blocked = blockedResult.data ?? 0;
       setMetrics({ checked: allowed + blocked, blocked, allowed });
-    } catch (err) {
-      console.error("fetchMetrics error:", err);
+    } catch {
+      toast.error("Unable to load moderation metrics.");
+    } finally {
+      setMetricsLoading(false);
     }
-    setMetricsLoading(false);
   }
 
   async function fetchMessages() {
@@ -102,12 +108,13 @@ export default function TopicChat() {
 
       if (modResult.decision === "BLOCK") {
         // Store blocked message
-        await supabase.from("blocked_messages").insert({
+        const { error: blockedInsertError } = await supabase.from("blocked_messages").insert({
           topic_id: topic.id,
           user_id: user!.id,
           content: input,
           reason: modResult.reason || "Not relevant to community discussion",
         });
+        if (blockedInsertError) throw blockedInsertError;
         setBlockMessage(modResult.reason || "This message is not relevant to the community discussion.");
         setInput("");
         setSending(false);
@@ -125,6 +132,7 @@ export default function TopicChat() {
 
       if (error) throw error;
       setInput("");
+      void fetchMetrics();
     } catch (err: any) {
       toast.error(err.message || "Failed to send message");
     }
